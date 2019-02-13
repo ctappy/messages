@@ -1,5 +1,6 @@
 message_client/message_client
 message_server/message_server
+config.json
 *.crt
 *.key
 *.pem

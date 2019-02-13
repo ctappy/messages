@@ -1,0 +1,12 @@
+{
+  "smtp": {
+    "server": "smtp.gmail.com",
+    "port": 465,
+    "username": "smtp-username",
+    "password": "smtp-password"
+  },
+  "slack": {
+    "slack_key": "slack-key",
+    "channel_id": "channel-id"
+  }
+}
