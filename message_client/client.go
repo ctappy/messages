@@ -37,20 +37,30 @@ func main() {
 	c := messagepb.NewMessageServiceClient(conn)
 
 	fmt.Println("Creating the message")
-	message := &messagepb.Message{
-		Slack:   false,
-		Email:   true,
+	message := &messagepb.EmailMessage{
 		To:      "Colby",
-		From:    "My first message",
-		Subject: "Content of message",
-		Body:    "Content of message",
+		From:    "My first Email message",
+		Subject: "Content of Email message",
+		Body:    "Content of Email message",
 	}
-	createMessageRes, err := c.CreateMessage(context.Background(), &messagepb.CreateMessageRequest{Message: message})
+	createEmailMessageRes, err := c.CreateEmailMessage(context.Background(), &messagepb.CreateEmailMessageRequest{Message: message})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Message has been created: %v\n", createMessageRes)
-	messageID := createMessageRes.GetMessage().GetId()
+	fmt.Printf("Email Message has been created: %v\n", createEmailMessageRes)
+
+	messageID := createEmailMessageRes.GetMessage().GetId()
+	fmt.Println("SlackMessage ID:", messageID)
+	slackMessage := &messagepb.SlackMessage{
+		Subject: "Content of slack message",
+		Body:    "Content of slack message",
+	}
+	createMessageRes, err := c.CreateSlackMessage(context.Background(), &messagepb.CreateSlackMessageRequest{Message: slackMessage})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Slack Message has been created: %v\n", createMessageRes)
+	messageID = createMessageRes.GetMessage().GetId()
 	fmt.Println("Message ID:", messageID)
 
 }

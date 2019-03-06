@@ -21,13 +21,11 @@ import (
 type server struct {
 }
 
-func (*server) CreateMessage(ctx context.Context, req *messagepb.CreateMessageRequest) (*messagepb.CreateMessageResponse, error) {
+func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmailMessageRequest) (*messagepb.CreateEmailMessageResponse, error) {
 	fmt.Println("Create message request")
 	message := req.GetMessage()
 
 	data := messageItem{
-		Slack:   message.GetSlack(),
-		Email:   message.GetEmail(),
 		To:      message.GetTo(),
 		From:    message.GetFrom(),
 		Subject: message.GetSubject(),
@@ -36,11 +34,9 @@ func (*server) CreateMessage(ctx context.Context, req *messagepb.CreateMessageRe
 
 	fmt.Println(data)
 
-	return &messagepb.CreateMessageResponse{
-		Message: &messagepb.Message{
+	return &messagepb.CreateEmailMessageResponse{
+		Message: &messagepb.EmailMessage{
 			Id:      "",
-			Slack:   message.GetSlack(),
-			Email:   message.GetEmail(),
 			To:      message.GetTo(),
 			From:    message.GetFrom(),
 			Subject: message.GetSubject(),
@@ -49,11 +45,29 @@ func (*server) CreateMessage(ctx context.Context, req *messagepb.CreateMessageRe
 	}, nil
 }
 
-func dataToMessage(data *messageItem) *messagepb.Message {
-	return &messagepb.Message{
+func (*server) CreateSlackMessage(ctx context.Context, req *messagepb.CreateSlackMessageRequest) (*messagepb.CreateSlackMessageResponse, error) {
+	fmt.Println("Create message request")
+	message := req.GetMessage()
+
+	data := messageItem{
+		Subject: message.GetSubject(),
+		Body:    message.GetBody(),
+	}
+
+	fmt.Println(data)
+
+	return &messagepb.CreateSlackMessageResponse{
+		Message: &messagepb.SlackMessage{
+			Id:      "",
+			Subject: message.GetSubject(),
+			Body:    message.GetBody(),
+		},
+	}, nil
+}
+
+func dataToEmailMessage(data *messageItem) *messagepb.EmailMessage {
+	return &messagepb.EmailMessage{
 		Id:      data.ID,
-		Slack:   data.Slack,
-		Email:   data.Email,
 		To:      data.To,
 		From:    data.From,
 		Subject: data.Subject,
@@ -61,10 +75,16 @@ func dataToMessage(data *messageItem) *messagepb.Message {
 	}
 }
 
+func dataToSlackMessage(data *messageItem) *messagepb.SlackMessage {
+	return &messagepb.SlackMessage{
+		Id:      data.ID,
+		Subject: data.Subject,
+		Body:    data.Body,
+	}
+}
+
 type messageItem struct {
 	ID      string `id`
-	Slack   bool   `slack`
-	Email   bool   `email`
 	To      string `to`
 	From    string `from`
 	Subject string `subject`

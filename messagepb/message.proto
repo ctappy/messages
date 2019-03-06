@@ -4,22 +4,34 @@ package message;
 
 option go_package = "messagepb";
 
-message Message {
+message SlackMessage {
   string id = 1;
-  bool slack = 2;
-  bool email = 3;
+  string subject = 6;
+  string body = 7;
+}
+
+message EmailMessage {
+  string id = 1;
   string to = 4;
   string from = 5;
   string subject = 6;
   string body = 7;
 }
 
-message CreateMessageRequest {
-  Message message = 1;
+message CreateSlackMessageRequest {
+  SlackMessage message = 1;
 }
 
-message CreateMessageResponse {
-  Message message = 1; // will have a message id
+message CreateSlackMessageResponse {
+  SlackMessage message = 1;
+}
+
+message CreateEmailMessageRequest {
+  EmailMessage message = 1;
+}
+
+message CreateEmailMessageResponse {
+  EmailMessage message = 1;
 }
 
 // message ReadMessageRequest {
@@ -37,7 +49,8 @@ message CreateMessageResponse {
 // }
 
 service MessageService {
-  rpc CreateMessage (CreateMessageRequest) returns (CreateMessageResponse);
+  rpc CreateEmailMessage (CreateEmailMessageRequest) returns (CreateEmailMessageResponse);
+  rpc CreateSlackMessage (CreateSlackMessageRequest) returns (CreateSlackMessageResponse);
   // rpc ReadMessage (ReadMessageRequest) returns (ReadMessageResponse);
   // rpc ListMessage (ListMessageRequest) returns (stream ListMessageResponse);
 }
