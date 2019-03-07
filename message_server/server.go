@@ -25,7 +25,7 @@ func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmai
 	fmt.Println("Create message request")
 	message := req.GetMessage()
 
-	data := messageItem{
+	data := emailMessageItem{
 		To:      message.GetTo(),
 		From:    message.GetFrom(),
 		Subject: message.GetSubject(),
@@ -49,7 +49,7 @@ func (*server) CreateSlackMessage(ctx context.Context, req *messagepb.CreateSlac
 	fmt.Println("Create message request")
 	message := req.GetMessage()
 
-	data := messageItem{
+	data := slackMessageItem{
 		Subject: message.GetSubject(),
 		Body:    message.GetBody(),
 	}
@@ -65,7 +65,7 @@ func (*server) CreateSlackMessage(ctx context.Context, req *messagepb.CreateSlac
 	}, nil
 }
 
-func dataToEmailMessage(data *messageItem) *messagepb.EmailMessage {
+func dataToEmailMessage(data *emailMessageItem) *messagepb.EmailMessage {
 	return &messagepb.EmailMessage{
 		Id:      data.ID,
 		To:      data.To,
@@ -75,7 +75,7 @@ func dataToEmailMessage(data *messageItem) *messagepb.EmailMessage {
 	}
 }
 
-func dataToSlackMessage(data *messageItem) *messagepb.SlackMessage {
+func dataToSlackMessage(data *slackMessageItem) *messagepb.SlackMessage {
 	return &messagepb.SlackMessage{
 		Id:      data.ID,
 		Subject: data.Subject,
@@ -83,7 +83,13 @@ func dataToSlackMessage(data *messageItem) *messagepb.SlackMessage {
 	}
 }
 
-type messageItem struct {
+type slackMessageItem struct {
+	ID      string `id`
+	Subject string `subject`
+	Body    string `body`
+}
+
+type emailMessageItem struct {
 	ID      string `id`
 	To      string `to`
 	From    string `from`

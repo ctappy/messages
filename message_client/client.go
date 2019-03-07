@@ -27,7 +27,7 @@ func main() {
 		}
 		opts = grpc.WithTransportCredentials(creds)
 	}
-	conn, err := grpc.Dial("localhost:50052", opts)
+	conn, err := grpc.Dial("127.0.0.1:50052", opts)
 
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)
