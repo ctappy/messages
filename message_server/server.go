@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/ctaperts/grpc-messages/messagepb"
 	"google.golang.org/grpc"
+	"io"
+	"io/ioutil"
 	// "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -98,18 +101,40 @@ type emailMessageItem struct {
 	Body    string `body`
 }
 
+type Config struct {
+	SMTP struct {
+		Server   string `json:"server"`
+		Port     int    `json:"port"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+	} `json:"smtp"`
+	Slack struct {
+		SlackKey  string `json:"slack_key"`
+		ChannelID string `json:"channel_id"`
+	} `json:"slack"`
+}
+
+func loadConfig(jsonFile io.Reader) (Config, error) {
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	var config Config
+	err := json.Unmarshal(byteValue, &config)
+	return config, err
+}
+
 func main() {
 	// if we crash the go code, output file name and line number
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// setup flags
 	configPtr := flag.String("config", "./config.json", "JSON config file location")
+	debug := flag.Bool("debug", false, "debug option")
 	flag.Parse()
 
 	// load json
 	if _, err := os.Stat(*configPtr); err == nil {
-		fmt.Printf("Loading configuration from %q\n", *configPtr)
-
+		if *debug {
+			fmt.Printf("Loading configuration from %q\n", *configPtr)
+		}
 	} else if os.IsNotExist(err) {
 		log.Fatalf("File not found %q %v\n", *configPtr, err)
 	} else {
@@ -117,11 +142,20 @@ func main() {
 	}
 	jsonFile, err := os.Open(*configPtr)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("Failed to open %q %v", *configPtr, err)
 	}
-	fmt.Printf("Successfully Opened %q\n", *configPtr)
+	if *debug {
+		fmt.Printf("Successfully Opened %q\n", *configPtr)
+	}
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
+	config, err := loadConfig(jsonFile)
+	if err != nil {
+		log.Fatalf("Failed to load %q %v", *configPtr, err)
+	}
+	if *debug {
+		fmt.Println("loaded:", config)
+	}
 
 	fmt.Println("Message Service Started")
 
