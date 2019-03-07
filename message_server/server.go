@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 	// "google.golang.org/grpc/status"
+	"flag"
 	"log"
 	"os"
 	"os/signal"
@@ -100,6 +101,27 @@ type emailMessageItem struct {
 func main() {
 	// if we crash the go code, output file name and line number
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	// setup flags
+	configPtr := flag.String("config", "./config.json", "JSON config file location")
+	flag.Parse()
+
+	// load json
+	if _, err := os.Stat(*configPtr); err == nil {
+		fmt.Printf("Loading configuration from %q\n", *configPtr)
+
+	} else if os.IsNotExist(err) {
+		log.Fatalf("File not found %q %v\n", *configPtr, err)
+	} else {
+		log.Fatalf("Issue finding file %q %v\n", *configPtr, err)
+	}
+	jsonFile, err := os.Open(*configPtr)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("Successfully Opened %q\n", *configPtr)
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
 
 	fmt.Println("Message Service Started")
 
