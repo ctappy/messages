@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"io"
 	"io/ioutil"
+	// "net/smtp"
 	// "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -37,6 +38,27 @@ func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmai
 	}
 
 	fmt.Println(data)
+	fmt.Println(LocalConfig)
+
+	// // Connect to the remote SMTP server.
+	// c, err := smtp.Dial("smtp.gmail.com:465")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer c.Close()
+	// // Set the sender and recipient.
+	// c.Mail("colbytaperts@gmail.com")
+	// c.Rcpt("colbytaperts@gmail.com")
+	// // Send the email body.
+	// wc, err := c.Data()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer wc.Close()
+	// buf := bytes.NewBufferString("This is the email body.")
+	// if _, err = buf.WriteTo(wc); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	return &messagepb.CreateEmailMessageResponse{
 		Message: &messagepb.EmailMessage{
@@ -114,20 +136,29 @@ type Config struct {
 	} `json:"slack"`
 }
 
-func loadConfig(jsonFile io.Reader) (Config, error) {
+func loadConfig(jsonFile io.Reader) Config {
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	var config Config
 	err := json.Unmarshal(byteValue, &config)
-	return config, err
+	if err != nil {
+		log.Fatalf("Failed to load json file %v", err)
+	}
+	return config
 }
 
-func main() {
+// TODO replace with context
+/* global variable declaration */
+var LocalConfig Config
+var debug *bool
+
+// init
+func init() {
 	// if we crash the go code, output file name and line number
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// setup flags
 	configPtr := flag.String("config", "./config.json", "JSON config file location")
-	debug := flag.Bool("debug", false, "debug option")
+	debug = flag.Bool("debug", false, "debug option")
 	flag.Parse()
 
 	// load json
@@ -149,12 +180,12 @@ func main() {
 	}
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
-	config, err := loadConfig(jsonFile)
-	if err != nil {
-		log.Fatalf("Failed to load %q %v", *configPtr, err)
-	}
+	LocalConfig = loadConfig(jsonFile)
+}
+
+func main() {
 	if *debug {
-		fmt.Println("loaded:", config)
+		fmt.Println("loaded:", LocalConfig)
 	}
 
 	fmt.Println("Message Service Started")
