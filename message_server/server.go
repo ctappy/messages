@@ -27,7 +27,7 @@ type server struct {
 }
 
 func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmailMessageRequest) (*messagepb.CreateEmailMessageResponse, error) {
-	fmt.Println("Create message request")
+	fmt.Println("Create email message request")
 	message := req.GetMessage()
 
 	data := emailMessageItem{
@@ -38,6 +38,7 @@ func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmai
 	}
 
 	fmt.Println(data)
+	fmt.Println("TO:", data.To)
 	fmt.Println(LocalConfig)
 
 	// // Connect to the remote SMTP server.
@@ -72,7 +73,7 @@ func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmai
 }
 
 func (*server) CreateSlackMessage(ctx context.Context, req *messagepb.CreateSlackMessageRequest) (*messagepb.CreateSlackMessageResponse, error) {
-	fmt.Println("Create message request")
+	fmt.Println("Create slack message request")
 	message := req.GetMessage()
 
 	data := slackMessageItem{

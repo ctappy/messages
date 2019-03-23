@@ -38,7 +38,7 @@ func main() {
 
 	fmt.Println("Creating the message")
 	message := &messagepb.EmailMessage{
-		To:      "Colby",
+		To:      "colbytaperts@gmail.com",
 		From:    "My first Email message",
 		Subject: "Content of Email message",
 		Body:    "Content of Email message",
