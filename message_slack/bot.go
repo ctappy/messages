@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"github.com/nlopes/slack"
 	"io"
 	"io/ioutil"
@@ -46,14 +45,12 @@ func getId(api *slack.Client) (userName, userID string) {
 	// Find the bot info
 	authTest, err := api.AuthTest()
 	if err != nil {
-		fmt.Printf("Error getting info: %s\n", err)
+		log.Printf("Error getting info: %s\n", err)
 		return
 	}
 
 	userID = authTest.UserID
 	userName = authTest.User
-	fmt.Println("Bot Name:", userName)
-	fmt.Println("Bot ID:", userID)
 	return
 }
 
@@ -63,7 +60,10 @@ func SlackBot() {
 		slack.OptionDebug(true),
 		slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
 	)
-	_, _ = getId(api)
+	userName, userID := getId(api)
+	log.Println("Starting RTM slackbot")
+	log.Println("Bot Name:", userName)
+	log.Println("Bot ID:", userID)
 
 	rtm := api.NewRTM(slack.RTMOptionUseStart(true))
 	go rtm.ManageConnection()
@@ -104,7 +104,7 @@ func SlackBot() {
 }
 func messageEvent(ev *slack.MessageEvent, rtm *slack.RTM, done chan struct{}) bool {
 	if ev.Text == shutDownMessage {
-		fmt.Println("Shutting down message received")
+		log.Println("Shutting down message received")
 		rtm.SendMessage(rtm.NewOutgoingMessage("Shutting down now...", "CANSP3PRR"))
 		rtm.Disconnect()
 		done <- struct{}{}
@@ -127,7 +127,7 @@ func init() {
 	// load json
 	if _, err := os.Stat(*configPtr); err == nil {
 		if *debug {
-			fmt.Printf("Loading configuration from %q\n", *configPtr)
+			log.Printf("Loading configuration from %q\n", *configPtr)
 		}
 	} else if os.IsNotExist(err) {
 		log.Fatalf("File not found %q %v\n", *configPtr, err)
@@ -139,7 +139,7 @@ func init() {
 		log.Fatalf("Failed to open %q %v", *configPtr, err)
 	}
 	if *debug {
-		fmt.Printf("Successfully Opened %q\n", *configPtr)
+		log.Printf("Successfully Opened %q\n", *configPtr)
 	}
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
