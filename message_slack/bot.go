@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"github.com/ctaperts/messages/message_slack/message/message"
 	"github.com/nlopes/slack"
 	"io"
 	"io/ioutil"
@@ -101,17 +102,6 @@ func SlackBot() {
 
 	<-done
 
-}
-func messageEvent(ev *slack.MessageEvent, rtm *slack.RTM, done chan struct{}) bool {
-	if ev.Text == shutDownMessage {
-		log.Println("Shutting down message received")
-		rtm.SendMessage(rtm.NewOutgoingMessage("Shutting down now...", "CANSP3PRR"))
-		rtm.Disconnect()
-		done <- struct{}{}
-		return true
-	} else {
-		return false
-	}
 }
 
 // init
