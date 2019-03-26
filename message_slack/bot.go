@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"github.com/ctaperts/messages/message_slack/message/message"
+	"github.com/ctaperts/messages/message_slack/src/variables"
 	"github.com/nlopes/slack"
 	"io"
 	"io/ioutil"
@@ -11,35 +12,13 @@ import (
 	"os"
 )
 
-type Config struct {
-	SMTP struct {
-		Server   string `json:"server"`
-		Port     int    `json:"port"`
-		Username string `json:"username"`
-		Password string `json:"password"`
-	} `json:"smtp"`
-	Slack struct {
-		SlackKey  string `json:"slack_key"`
-		ChannelID string `json:"channel_id"`
-	} `json:"slack"`
-}
-
-var LocalConfig Config
-var debug *bool
+var (
+	LocalConfig Config
+)
 
 const (
 	shutDownMessage = "shutdown messagebot"
 )
-
-func loadConfig(jsonFile io.Reader) Config {
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var config Config
-	err := json.Unmarshal(byteValue, &config)
-	if err != nil {
-		log.Fatalf("Failed to load json file %v", err)
-	}
-	return config
-}
 
 func getId(api *slack.Client) (userName, userID string) {
 
@@ -56,6 +35,7 @@ func getId(api *slack.Client) (userName, userID string) {
 }
 
 func SlackBot() {
+	args := Arguments.Load()
 	api := slack.New(
 		LocalConfig.Slack.SlackKey,
 		slack.OptionDebug(true),
@@ -104,36 +84,8 @@ func SlackBot() {
 
 }
 
-// init
 func init() {
-	// if we crash the go code, output file name and line number
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
-	// setup flags
-	configPtr := flag.String("config", "./config.json", "JSON config file location")
-	debug = flag.Bool("debug", false, "debug option")
-	flag.Parse()
-
-	// load json
-	if _, err := os.Stat(*configPtr); err == nil {
-		if *debug {
-			log.Printf("Loading configuration from %q\n", *configPtr)
-		}
-	} else if os.IsNotExist(err) {
-		log.Fatalf("File not found %q %v\n", *configPtr, err)
-	} else {
-		log.Fatalf("Issue finding file %q %v\n", *configPtr, err)
-	}
-	jsonFile, err := os.Open(*configPtr)
-	if err != nil {
-		log.Fatalf("Failed to open %q %v", *configPtr, err)
-	}
-	if *debug {
-		log.Printf("Successfully Opened %q\n", *configPtr)
-	}
-	// defer the closing of our jsonFile so that we can parse it later on
-	defer jsonFile.Close()
-	LocalConfig = loadConfig(jsonFile)
+	LocalConfig = LoadConfig()
 }
 
 func main() {
