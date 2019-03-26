@@ -5,6 +5,10 @@ import (
 	"log"
 )
 
+const (
+	shutDownMessage = "shutdown messagebot"
+)
+
 func Event(ev *slack.MessageEvent, rtm *slack.RTM, done chan struct{}) bool {
 	if ev.Text == shutDownMessage {
 		log.Println("Shutting down message received")

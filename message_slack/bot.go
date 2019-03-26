@@ -1,23 +1,19 @@
-package main
+package bot
 
 import (
-	"encoding/json"
-	"flag"
-	"github.com/ctaperts/messages/message_slack/message/message"
-	"github.com/ctaperts/messages/message_slack/src/variables"
+	// "encoding/json"
+	// "flag"
+	"github.com/ctaperts/messages/message_slack/message"
+	"github.com/ctaperts/messages/src"
 	"github.com/nlopes/slack"
-	"io"
-	"io/ioutil"
+	// "io"
+	// "io/ioutil"
 	"log"
 	"os"
 )
 
 var (
-	LocalConfig Config
-)
-
-const (
-	shutDownMessage = "shutdown messagebot"
+	LocalConfig configuration.Config
 )
 
 func getId(api *slack.Client) (userName, userID string) {
@@ -35,13 +31,15 @@ func getId(api *slack.Client) (userName, userID string) {
 }
 
 func SlackBot() {
-	args := Arguments.Load()
+	LocalConfig = configuration.LoadConfig()
 	api := slack.New(
 		LocalConfig.Slack.SlackKey,
 		slack.OptionDebug(true),
 		slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
 	)
 	userName, userID := getId(api)
+	args := configuration.DefaultArgs
+	log.Println("ARGS:", args)
 	log.Println("Starting RTM slackbot")
 	log.Println("Bot Name:", userName)
 	log.Println("Bot ID:", userID)
@@ -71,7 +69,7 @@ func SlackBot() {
 				connectedReceived = true
 			// Check messages in channel
 			case *slack.MessageEvent:
-				if messageEvent(ev, rtm, done) == false {
+				if message.Event(ev, rtm, done) == false {
 					log.Printf("Discarding message with content %+v\n", ev)
 				}
 			default:
@@ -82,12 +80,4 @@ func SlackBot() {
 
 	<-done
 
-}
-
-func init() {
-	LocalConfig = LoadConfig()
-}
-
-func main() {
-	SlackBot()
 }

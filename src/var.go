@@ -1,4 +1,4 @@
-package variables
+package configuration
 
 type Config struct {
 	SMTP struct {
@@ -27,15 +27,15 @@ type args struct {
 }
 
 // default values
-func New(name string) Arguments {
+func DefaultArgs(botName, botID string) args {
 	return args{
 		false, // Info  bool
 		false, // Warn  bool
 		false, // Debug bool
 		false, // Trace bool
 		// Bot info
-		"", // BotID   string
-		"", // BotName string
+		botID,   // BotID   string
+		botName, // BotName string
 		// Bot options
 		false, // BotDisable bool
 	}
