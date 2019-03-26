@@ -38,8 +38,10 @@ func SlackBot() {
 		slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
 	)
 	userName, userID := getId(api)
-	args := configuration.DefaultArgs
-	log.Println("ARGS:", args)
+	args := configuration.DefaultArgs(userName, userID)
+	if args.Debug {
+		log.Println("arguments:", args)
+	}
 	log.Println("Starting RTM slackbot")
 	log.Println("Bot Name:", userName)
 	log.Println("Bot ID:", userID)

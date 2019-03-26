@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello world")
+	fmt.Println("Starting message slackbot")
 	bot.SlackBot()
 }
