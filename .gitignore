@@ -2,6 +2,7 @@ message_client/message_client
 message_server/message_server
 message_slack/message_slack
 message_email/message_email
+messages
 config.json
 *.crt
 *.key
