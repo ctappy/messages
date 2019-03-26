@@ -27,15 +27,15 @@ type args struct {
 }
 
 // default values
-func DefaultArgs(botName, botID string) args {
+func DefaultArgs() args {
 	return args{
 		false, // Info  bool
 		false, // Warn  bool
 		false, // Debug bool
 		false, // Trace bool
 		// Bot info
-		botID,   // BotID   string
-		botName, // BotName string
+		"", // BotID   string
+		"", // BotName string
 		// Bot options
 		false, // BotDisable bool
 	}

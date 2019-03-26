@@ -37,8 +37,10 @@ func SlackBot() {
 		slack.OptionDebug(true),
 		slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
 	)
+	args := configuration.DefaultArgs()
 	userName, userID := getId(api)
-	args := configuration.DefaultArgs(userName, userID)
+	args.BotName = userName
+	args.BotID = userID
 	if args.Debug {
 		log.Println("arguments:", args)
 	}
