@@ -2,32 +2,23 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"github.com/ctaperts/grpc-messages/messagepb"
+	"github.com/ctaperts/messages/messagepb"
 	"google.golang.org/grpc"
-	"io"
-	"io/ioutil"
-	// "net/smtp"
+	"log"
 	// "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 	// "google.golang.org/grpc/status"
-	"flag"
-	"log"
+	"github.com/ctaperts/messages/message_email"
+	"net"
 	"os"
 	"os/signal"
-	// "io"
-	"net"
-	// "strconv"
-	// "time"
 )
 
 type server struct {
 }
 
 func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmailMessageRequest) (*messagepb.CreateEmailMessageResponse, error) {
-	fmt.Println("Create email message request")
 	message := req.GetMessage()
 
 	data := emailMessageItem{
@@ -37,29 +28,12 @@ func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmai
 		Body:    message.GetBody(),
 	}
 
-	fmt.Println(data)
-	fmt.Println("TO:", data.To)
-	fmt.Println(LocalConfig)
-
-	// // Connect to the remote SMTP server.
-	// c, err := smtp.Dial("smtp.gmail.com:465")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer c.Close()
-	// // Set the sender and recipient.
-	// c.Mail("colbytaperts@gmail.com")
-	// c.Rcpt("colbytaperts@gmail.com")
-	// // Send the email body.
-	// wc, err := c.Data()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer wc.Close()
-	// buf := bytes.NewBufferString("This is the email body.")
-	// if _, err = buf.WriteTo(wc); err != nil {
-	// 	log.Fatal(err)
-	// }
+	log.Printf("From: %s, Subject: %s, Body: %s, To: %s\n", data.From, data.Subject, data.Body, data.To)
+	if email.Send(data.From, data.Subject, data.Body, []string{data.To}) {
+		log.Println("Email sent successfully")
+	} else {
+		log.Println("Email failed to send")
+	}
 
 	return &messagepb.CreateEmailMessageResponse{
 		Message: &messagepb.EmailMessage{
@@ -73,7 +47,7 @@ func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmai
 }
 
 func (*server) CreateSlackMessage(ctx context.Context, req *messagepb.CreateSlackMessageRequest) (*messagepb.CreateSlackMessageResponse, error) {
-	fmt.Println("Create slack message request")
+	log.Println("Create slack message request")
 	message := req.GetMessage()
 
 	data := slackMessageItem{
@@ -81,7 +55,7 @@ func (*server) CreateSlackMessage(ctx context.Context, req *messagepb.CreateSlac
 		Body:    message.GetBody(),
 	}
 
-	fmt.Println(data)
+	log.Println(data)
 
 	return &messagepb.CreateSlackMessageResponse{
 		Message: &messagepb.SlackMessage{
@@ -124,72 +98,10 @@ type emailMessageItem struct {
 	Body    string `body`
 }
 
-type Config struct {
-	SMTP struct {
-		Server   string `json:"server"`
-		Port     int    `json:"port"`
-		Username string `json:"username"`
-		Password string `json:"password"`
-	} `json:"smtp"`
-	Slack struct {
-		SlackKey  string `json:"slack_key"`
-		ChannelID string `json:"channel_id"`
-	} `json:"slack"`
-}
-
-func loadConfig(jsonFile io.Reader) Config {
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var config Config
-	err := json.Unmarshal(byteValue, &config)
-	if err != nil {
-		log.Fatalf("Failed to load json file %v", err)
-	}
-	return config
-}
-
-// TODO replace with context
-/* global variable declaration */
-var LocalConfig Config
 var debug *bool
 
-// init
-func init() {
-	// if we crash the go code, output file name and line number
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
-	// setup flags
-	configPtr := flag.String("config", "./config.json", "JSON config file location")
-	debug = flag.Bool("debug", false, "debug option")
-	flag.Parse()
-
-	// load json
-	if _, err := os.Stat(*configPtr); err == nil {
-		if *debug {
-			fmt.Printf("Loading configuration from %q\n", *configPtr)
-		}
-	} else if os.IsNotExist(err) {
-		log.Fatalf("File not found %q %v\n", *configPtr, err)
-	} else {
-		log.Fatalf("Issue finding file %q %v\n", *configPtr, err)
-	}
-	jsonFile, err := os.Open(*configPtr)
-	if err != nil {
-		log.Fatalf("Failed to open %q %v", *configPtr, err)
-	}
-	if *debug {
-		fmt.Printf("Successfully Opened %q\n", *configPtr)
-	}
-	// defer the closing of our jsonFile so that we can parse it later on
-	defer jsonFile.Close()
-	LocalConfig = loadConfig(jsonFile)
-}
-
 func main() {
-	if *debug {
-		fmt.Println("loaded:", LocalConfig)
-	}
-
-	fmt.Println("Message Service Started")
+	log.Println("Message Service Started")
 
 	lis, err := net.Listen("tcp", "0.0.0.0:50052")
 	if err != nil {
@@ -217,7 +129,7 @@ func main() {
 	reflection.Register(s)
 
 	go func() {
-		fmt.Println("Starting Server...")
+		log.Println("Starting Server...")
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %v", err)
 		}
@@ -229,9 +141,9 @@ func main() {
 
 	// Block until signal is received
 	<-ch
-	fmt.Println("Stopping the server")
+	log.Println("Stopping the server")
 	s.Stop()
-	fmt.Println("Closing the listener")
+	log.Println("Closing the listener")
 	lis.Close()
-	fmt.Println("Application is stopped")
+	log.Println("Application is stopped")
 }

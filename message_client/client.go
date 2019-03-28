@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/ctaperts/grpc-messages/messagepb"
+	"github.com/ctaperts/messages/messagepb"
 	"google.golang.org/grpc"
 	// "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"

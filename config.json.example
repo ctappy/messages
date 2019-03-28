@@ -1,7 +1,7 @@
 {
   "smtp": {
     "server": "smtp.gmail.com",
-    "port": 587,
+    "port": 465,
     "username": "smtp-username",
     "password": "smtp-password"
   },
