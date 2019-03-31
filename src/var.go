@@ -8,8 +8,8 @@ type Config struct {
 		Password string `json:"password"`
 	} `json:"smtp"`
 	Slack struct {
-		SlackKey  string `json:"slack_key"`
-		ChannelID string `json:"channel_id"`
+		BotUserToken string `json:"bot_user_token"`
+		ChannelName  string `json:"channel_name"`
 	} `json:"slack"`
 }
 

@@ -14,13 +14,23 @@ var (
 	trace       bool
 )
 
-func getId(api *slack.Client) (userName, userID string) {
+func getInfo(channelName string, api *slack.Client) (userName, userID, channelID string) {
 
 	// Find the bot info
 	authTest, err := api.AuthTest()
 	if err != nil {
 		log.Panicf("Error getting info: %s\n", err)
 		return
+	}
+	channels, err := api.GetChannels(false)
+	if err != nil {
+		log.Printf("%s\n", err)
+		return
+	}
+	for _, channel := range channels {
+		if channelName == channel.Name {
+			channelID = channel.ID
+		}
 	}
 
 	userID = authTest.UserID
@@ -37,18 +47,19 @@ func Bot(logLevel string, Log logging.Logs) {
 	}
 
 	LocalConfig = configuration.LoadConfig()
+	Log.Trace.Println("Config:", LocalConfig.Slack)
+	Log.Info.Println("Slack OAuth Key:", LocalConfig.Slack.BotUserToken)
+	Log.Info.Println("Channel Name:", LocalConfig.Slack.ChannelName)
 	api := slack.New(
-		LocalConfig.Slack.SlackKey,
+		LocalConfig.Slack.BotUserToken,
 		slack.OptionDebug(trace),
 		slack.OptionLog(log.New(os.Stdout, "trace-slack-bot: ", log.Lshortfile|log.LstdFlags)),
 	)
 	args := configuration.DefaultArgs()
-	userName, userID := getId(api)
+	userName, userID, channelID := getInfo(LocalConfig.Slack.ChannelName, api)
 	args.BotName = userName
 	args.BotID = userID
-	if args.Debug {
-		log.Println("arguments:", args)
-	}
+	Log.Trace.Println("arguments:", args)
 	Log.Info.Println("Starting RTM slackbot")
 	Log.Debug.Println("Bot Name:", userName)
 	Log.Debug.Println("Bot ID:", userID)
@@ -57,7 +68,7 @@ func Bot(logLevel string, Log logging.Logs) {
 	go rtm.ManageConnection()
 
 	// Start notice
-	rtm.SendMessage(rtm.NewOutgoingMessage("Starting messagebot", LocalConfig.Slack.ChannelID))
+	rtm.SendMessage(rtm.NewOutgoingMessage("Starting messagebot", channelID))
 
 	// Observe incoming messages.
 	done := make(chan struct{})

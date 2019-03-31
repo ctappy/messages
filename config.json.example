@@ -6,7 +6,7 @@
     "password": "smtp-password"
   },
   "slack": {
-    "slack_key": "slack-key",
-    "channel_id": "3PRRCANSP"
+    "bot_user_token": "bot_user_oauth_access_token",
+    "channel_name": "general"
   }
 }
