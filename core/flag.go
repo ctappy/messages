@@ -1,30 +1,35 @@
 package core
 
 import (
-	"log"
-	"os"
-
 	"github.com/ctaperts/messages/message_slack"
 	"github.com/spf13/cobra"
+	"log"
+	"os"
 )
 
 func Exec() {
-	RootCmd.AddCommand(StartGRPCCmd)
-	RootCmd.AddCommand(StartSlackBotCmd)
+	rootCmd.AddCommand(startGRPCCmd)
+	rootCmd.AddCommand(startSlackBotCmd)
 
-	if err := RootCmd.Execute(); err != nil {
-		log.Fatal(err)
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
+func setup(cmd *cobra.Command, args []string) {
+	// Setup logging
+	setLogLevel(logLevel)
+	logInit(*logSettings)
+	Log.info.Printf("Log level set to %s\n", logLevel)
+}
+
 func startGRPC(cmd *cobra.Command, args []string) {
-	log.Println("Starting GRPC Message Server")
+	Log.info.Println("Starting GRPC Message Server")
 }
 
 func startSlackBot(cmd *cobra.Command, args []string) {
-	log.Println("Starting Slack Message Server")
-	bot.SlackBot()
+	Log.info.Println("Starting Slack Message Server")
+	slack.Bot()
 }
 
 func initStartSlackBot(cmd *cobra.Command, args []string) error {

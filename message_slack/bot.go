@@ -1,4 +1,4 @@
-package bot
+package slack
 
 import (
 	// "encoding/json"
@@ -30,7 +30,7 @@ func getId(api *slack.Client) (userName, userID string) {
 	return
 }
 
-func SlackBot() {
+func Bot() {
 	LocalConfig = configuration.LoadConfig()
 	api := slack.New(
 		LocalConfig.Slack.SlackKey,
