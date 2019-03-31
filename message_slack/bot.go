@@ -1,19 +1,17 @@
 package slack
 
 import (
-	// "encoding/json"
-	// "flag"
+	"github.com/ctaperts/messages/log"
 	"github.com/ctaperts/messages/message_slack/message"
 	"github.com/ctaperts/messages/src"
 	"github.com/nlopes/slack"
-	// "io"
-	// "io/ioutil"
 	"log"
 	"os"
 )
 
 var (
 	LocalConfig configuration.Config
+	trace       bool
 )
 
 func getId(api *slack.Client) (userName, userID string) {
@@ -21,7 +19,7 @@ func getId(api *slack.Client) (userName, userID string) {
 	// Find the bot info
 	authTest, err := api.AuthTest()
 	if err != nil {
-		log.Printf("Error getting info: %s\n", err)
+		log.Panicf("Error getting info: %s\n", err)
 		return
 	}
 
@@ -30,12 +28,19 @@ func getId(api *slack.Client) (userName, userID string) {
 	return
 }
 
-func Bot() {
+func Bot(logLevel string, Log logging.Logs) {
+	if logLevel == "trace" {
+		trace = true
+		Log.Info.Println("Running slackbot in trace mode")
+	} else {
+		trace = false
+	}
+
 	LocalConfig = configuration.LoadConfig()
 	api := slack.New(
 		LocalConfig.Slack.SlackKey,
-		slack.OptionDebug(true),
-		slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
+		slack.OptionDebug(trace),
+		slack.OptionLog(log.New(os.Stdout, "trace-slack-bot: ", log.Lshortfile|log.LstdFlags)),
 	)
 	args := configuration.DefaultArgs()
 	userName, userID := getId(api)
@@ -44,9 +49,9 @@ func Bot() {
 	if args.Debug {
 		log.Println("arguments:", args)
 	}
-	log.Println("Starting RTM slackbot")
-	log.Println("Bot Name:", userName)
-	log.Println("Bot ID:", userID)
+	Log.Info.Println("Starting RTM slackbot")
+	Log.Debug.Println("Bot Name:", userName)
+	Log.Debug.Println("Bot ID:", userID)
 
 	rtm := api.NewRTM(slack.RTMOptionUseStart(true))
 	go rtm.ManageConnection()
@@ -63,21 +68,21 @@ func Bot() {
 			switch ev := msg.Data.(type) {
 			case *slack.ConnectingEvent:
 				if connectingReceived {
-					log.Panicf("Received multiple connecting events.\n")
+					Log.Fatal.Panicf("Received multiple connecting events.\n")
 				}
 				connectingReceived = true
 			case *slack.ConnectedEvent:
 				if connectedReceived {
-					log.Panicf("Received multiple connecting events.\n")
+					Log.Fatal.Panicf("Received multiple connecting events.\n")
 				}
 				connectedReceived = true
 			// Check messages in channel
 			case *slack.MessageEvent:
 				if message.Event(ev, rtm, done) == false {
-					log.Printf("Discarding message with content %+v\n", ev)
+					Log.Debug.Printf("Discarding message with content %+v\n", ev)
 				}
 			default:
-				log.Printf("Discarded event of type '%s' with content '%#v'\n", msg.Type, ev)
+				Log.Debug.Printf("Discarded event of type '%s' with content '%#v'\n", msg.Type, ev)
 			}
 		}
 	}()
