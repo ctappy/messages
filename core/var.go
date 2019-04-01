@@ -6,6 +6,7 @@ import (
 
 var (
 	logLevel string
+	logDir   string
 
 	rootCmd = &cobra.Command{
 		Use:              "message",
@@ -32,4 +33,5 @@ var (
 func init() {
 	// Logs require PersistentFlags to be available to all flag arguments
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "error", "Show log level output, accepts trace, info, warn, debug, error and fatal")
+	rootCmd.PersistentFlags().StringVarP(&logDir, "log-dir", "d", "logs", "Set log directory")
 }

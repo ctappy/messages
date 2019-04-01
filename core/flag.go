@@ -17,14 +17,15 @@ func Exec() {
 	rootCmd.AddCommand(startSlackBotCmd)
 
 	if err := rootCmd.Execute(); err != nil {
+		log.Println(err)
 		os.Exit(1)
 	}
 }
 
 func setup(cmd *cobra.Command, args []string) {
 	// Setup logging
-	logging.SetLogLevel(logLevel)
-	logging.LogInit(*logging.LogSettings)
+	logging.SetupLogLevel(logLevel)
+	logging.LogInit(logDir, *logging.LogSettings)
 	Log = logging.Log
 	Log.Info.Printf("Log level set to %s\n", logLevel)
 }

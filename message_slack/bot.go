@@ -91,11 +91,9 @@ func Bot(logLevel string, Log logging.Logs) {
 				connectedReceived = true
 			// Check messages in channel
 			case *slack.MessageEvent:
-				if message.Event(LocalConfig, bot, ev, rtm, done) == false {
+				if message.Event(Log, LocalConfig, bot, ev, rtm, done) == false {
 					Log.Debug.Printf("Discarding message with content %+v\n", ev)
 					Log.Info.Printf("Text: %+v\n", ev.Text)
-					Log.Info.Printf("Username: %+v\n", ev.Username)
-					Log.Info.Printf("BotID: %+v\n", ev.BotID)
 				}
 			default:
 				Log.Debug.Printf("Discarded event of type '%s' with content '%#v'\n", msg.Type, ev)

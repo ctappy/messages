@@ -2,6 +2,7 @@ package message
 
 import (
 	"fmt"
+	"github.com/ctaperts/messages/log"
 	"github.com/ctaperts/messages/message_email"
 	"github.com/ctaperts/messages/src"
 	"github.com/nlopes/slack"
@@ -63,7 +64,7 @@ func formatEmailText(text string) (emailFrom, emailSubject, emailBody string, em
 	return
 }
 
-func Event(LocalConfig configuration.Config, bot configuration.BotInfo, ev *slack.MessageEvent, rtm *slack.RTM, done chan struct{}) bool {
+func Event(Log logging.Logs, LocalConfig configuration.Config, bot configuration.BotInfo, ev *slack.MessageEvent, rtm *slack.RTM, done chan struct{}) bool {
 	// Check text for exact message
 	switch text := ev.Text; text {
 	case fmt.Sprintf("<@%s> shutdown", bot.ID):
@@ -86,6 +87,7 @@ func Event(LocalConfig configuration.Config, bot configuration.BotInfo, ev *slac
 		emailFrom, emailSubject, emailBody, emailTo := formatEmailText(ev.Text)
 		if email.Send(LocalConfig, emailFrom, emailSubject, emailBody, emailTo) {
 			rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("Email Sent to %s", emailTo), bot.ChannelID))
+			Log.Email.Println(fmt.Sprintf("TO: %s, FROM: %s, SUBJECT: %s, BODY: %s, SLACK-CHANNEL: %s", emailTo, emailFrom, emailSubject, emailBody, bot.ChannelName))
 		} else {
 			rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("Failed to send email run `<@%s> email help` for more info", bot.ID), bot.ChannelID))
 		}
