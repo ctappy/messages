@@ -69,11 +69,11 @@ func LogInit(logdir string, logType logType) {
 		log.Ldate|log.Ltime|log.Lshortfile)
 
 	// Setup logs to stdout and files
-	fg, err := os.OpenFile(path.Join(logdir, "general.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	fg, err := os.OpenFile(path.Join(logdir, "general.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
-	fe, err := os.OpenFile(path.Join(logdir, "email.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	fe, err := os.OpenFile(path.Join(logdir, "email.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
@@ -86,39 +86,47 @@ func LogInit(logdir string, logType logType) {
 	Log.Email = log.New(io.MultiWriter(os.Stdout, fe),
 		"EMAIL: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
-	Log.General.Println("Starting...")
-	Log.Email.Println("Starting...")
 }
 
 // SetupLogs log level defaults
-func SetupLogLevel(logLevel string) {
+func SetupLogLevel(logdir, logLevel string) {
+	f, err := os.OpenFile(path.Join(logdir, "stdout.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	fe, err := os.OpenFile(path.Join(logdir, "stderr.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	// defer f.Close() // cannot close inside function
+	// defer fe.Close() // cannot close inside function
 	if logLevel == "fatal" {
-		LogSettings.fatalHandle = os.Stdout
+		LogSettings.fatalHandle = io.MultiWriter(os.Stderr, fe)
 	} else if logLevel == "error" {
-		LogSettings.fatalHandle = os.Stdout
-		LogSettings.errorHandle = os.Stdout
+		LogSettings.fatalHandle = io.MultiWriter(os.Stderr, fe)
+		LogSettings.errorHandle = io.MultiWriter(os.Stderr, fe)
 	} else if logLevel == "warn" {
-		LogSettings.fatalHandle = os.Stdout
-		LogSettings.errorHandle = os.Stdout
-		LogSettings.warnHandle = os.Stdout
+		LogSettings.fatalHandle = io.MultiWriter(os.Stderr, fe)
+		LogSettings.errorHandle = io.MultiWriter(os.Stderr, fe)
+		LogSettings.warnHandle = io.MultiWriter(os.Stdout, f)
 	} else if logLevel == "info" {
-		LogSettings.fatalHandle = os.Stdout
-		LogSettings.errorHandle = os.Stdout
-		LogSettings.infoHandle = os.Stdout
-		LogSettings.debugHandle = os.Stdout
+		LogSettings.fatalHandle = io.MultiWriter(os.Stderr, fe)
+		LogSettings.errorHandle = io.MultiWriter(os.Stderr, fe)
+		LogSettings.infoHandle = io.MultiWriter(os.Stdout, f)
+		LogSettings.debugHandle = io.MultiWriter(os.Stdout, f)
 	} else if logLevel == "debug" {
-		LogSettings.fatalHandle = os.Stdout
-		LogSettings.errorHandle = os.Stdout
-		LogSettings.infoHandle = os.Stdout
-		LogSettings.warnHandle = os.Stdout
-		LogSettings.debugHandle = os.Stdout
+		LogSettings.fatalHandle = io.MultiWriter(os.Stderr, fe)
+		LogSettings.errorHandle = io.MultiWriter(os.Stderr, fe)
+		LogSettings.infoHandle = io.MultiWriter(os.Stdout, f)
+		LogSettings.warnHandle = io.MultiWriter(os.Stdout, f)
+		LogSettings.debugHandle = io.MultiWriter(os.Stdout, f)
 	} else if logLevel == "trace" {
-		LogSettings.fatalHandle = os.Stdout
-		LogSettings.errorHandle = os.Stdout
-		LogSettings.traceHandle = os.Stdout
-		LogSettings.infoHandle = os.Stdout
-		LogSettings.warnHandle = os.Stdout
-		LogSettings.debugHandle = os.Stdout
+		LogSettings.fatalHandle = io.MultiWriter(os.Stderr, fe)
+		LogSettings.errorHandle = io.MultiWriter(os.Stderr, fe)
+		LogSettings.traceHandle = io.MultiWriter(os.Stdout, f)
+		LogSettings.infoHandle = io.MultiWriter(os.Stdout, f)
+		LogSettings.warnHandle = io.MultiWriter(os.Stdout, f)
+		LogSettings.debugHandle = io.MultiWriter(os.Stdout, f)
 	} else {
 		log.Println("Please use one of the following options for log level")
 		log.Println("fatal, error, warn, info, debug, or trace")
