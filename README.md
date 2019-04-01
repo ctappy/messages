@@ -9,7 +9,7 @@ Copy `config.json.example to `config.json`
 - set up permission scope, setup requires rtm permissions
 - select `Install App to Workspace`
 - copy Bot User OAuth Access Token key to `config.json`
-- copy the channel id from the URL
+- set channel name under `channel_name`
 
 ## Commands
 the flag `--log-level` accepts `trace`, `info`, `warn`, `debug`, `error` and `fatal`, defaults to `error`
