@@ -32,13 +32,14 @@ func (s *smtpServer) ServerName() string {
 
 func (mail *Mail) BuildMessage() string {
 	message := ""
-	message += fmt.Sprintf("From: %s\r\n", mail.senderId)
+	message += fmt.Sprintf("From: %s <%s>\r\n", mail.senderId, mail.senderId)
 	if len(mail.toIds) > 0 {
 		message += fmt.Sprintf("To: %s\r\n", strings.Join(mail.toIds, ";"))
 	}
 
 	message += fmt.Sprintf("Subject: %s\r\n", mail.subject)
-	message += "\r\n" + mail.body
+	message += "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+	message += "\r\n" + emailTemplate(mail.body)
 
 	return message
 }
@@ -46,7 +47,7 @@ func (mail *Mail) BuildMessage() string {
 func Send(LocalConfig configuration.Config, emailFrom, emailSubject, emailBody string, emailTo []string) bool {
 
 	mail := Mail{}
-	mail.senderId = LocalConfig.SMTP.Username
+	mail.senderId = emailFrom
 	mail.toIds = emailTo
 	mail.subject = emailSubject
 	mail.body = emailBody
@@ -56,7 +57,7 @@ func Send(LocalConfig configuration.Config, emailFrom, emailSubject, emailBody s
 	smtpServer := smtpServer{host: LocalConfig.SMTP.Server, port: strconv.Itoa(LocalConfig.SMTP.Port)}
 
 	//build an auth
-	auth := smtp.PlainAuth("", mail.senderId, LocalConfig.SMTP.Password, smtpServer.host)
+	auth := smtp.PlainAuth("", LocalConfig.SMTP.Username, LocalConfig.SMTP.Password, smtpServer.host)
 
 	// Gmail will reject connection if it's not secure
 	// TLS config

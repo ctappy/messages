@@ -23,3 +23,7 @@ messages slackbot
 ```
 messages grpc
 ```
+
+## FAQ
+- Email from address not being masked
+see `https://stackoverflow.com/questions/13946581/spring-java-mail-the-from-address-is-being-ignored`, another option would be to change to postfix type solution
