@@ -23,27 +23,31 @@ type Logs struct {
 }
 
 type logType struct {
-	fatalHandle io.Writer
-	errorHandle io.Writer
-	debugHandle io.Writer
-	warnHandle  io.Writer
-	infoHandle  io.Writer
-	traceHandle io.Writer
+	fatalHandle   io.Writer
+	errorHandle   io.Writer
+	debugHandle   io.Writer
+	warnHandle    io.Writer
+	infoHandle    io.Writer
+	traceHandle   io.Writer
+	generalHandle io.Writer
+	emailHandle   io.Writer
 }
 
 var (
 	Log         = Logs{}
 	LogSettings = &logType{
-		fatalHandle: ioutil.Discard,
-		errorHandle: ioutil.Discard,
-		debugHandle: ioutil.Discard,
-		warnHandle:  ioutil.Discard,
-		infoHandle:  ioutil.Discard,
-		traceHandle: ioutil.Discard,
+		fatalHandle:   ioutil.Discard,
+		errorHandle:   ioutil.Discard,
+		debugHandle:   ioutil.Discard,
+		warnHandle:    ioutil.Discard,
+		infoHandle:    ioutil.Discard,
+		traceHandle:   ioutil.Discard,
+		generalHandle: ioutil.Discard,
+		emailHandle:   ioutil.Discard,
 	}
 )
 
-func LogInit(logdir string, logType logType) {
+func LogInit(logType logType) {
 	Log.Trace = log.New(logType.traceHandle,
 		"TRACE: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
@@ -68,38 +72,57 @@ func LogInit(logdir string, logType logType) {
 		"FATAL: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	// Setup logs to stdout and files
-	fg, err := os.OpenFile(path.Join(logdir, "general.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	fe, err := os.OpenFile(path.Join(logdir, "email.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	// defer fe.Close() // cannot close inside function
-	// defer fg.Close() // cannot close inside function
-	Log.General = log.New(io.MultiWriter(os.Stdout, fg),
+	Log.General = log.New(logType.generalHandle,
 		"GENERAL: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	Log.Email = log.New(io.MultiWriter(os.Stdout, fe),
+	Log.Email = log.New(logType.emailHandle,
 		"EMAIL: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
+
 }
 
 // SetupLogs log level defaults
 func SetupLogLevel(logdir, logLevel string) {
+	// Setup log files
+
+	/////////////////////
+	// STDOUT LOG FILE //
+	/////////////////////
 	f, err := os.OpenFile(path.Join(logdir, "stdout.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
+	/////////////////////
+	// STDERR LOG FILE //
+	/////////////////////
 	fe, err := os.OpenFile(path.Join(logdir, "stderr.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
 	// defer f.Close() // cannot close inside function
 	// defer fe.Close() // cannot close inside function
+
+	////////////////////////////////
+	// GENERAL AND EMAIL LOG FILE //
+	////////////////////////////////
+	fg, err := os.OpenFile(path.Join(logdir, "general.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	femail, err := os.OpenFile(path.Join(logdir, "email.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	// defer fe.Close() // cannot close inside function
+	// defer fg.Close() // cannot close inside function
+
+	//////////////////////
+	// Setup log levels //
+	//////////////////////
+	LogSettings.generalHandle = io.MultiWriter(os.Stderr, fg)
+	LogSettings.emailHandle = io.MultiWriter(os.Stderr, femail)
+
 	if logLevel == "fatal" {
 		LogSettings.fatalHandle = io.MultiWriter(os.Stderr, fe)
 	} else if logLevel == "error" {
