@@ -43,9 +43,7 @@ func (mail *Mail) BuildMessage() string {
 	return message
 }
 
-func Send(emailFrom, emailSubject, emailBody string, emailTo []string) bool {
-
-	LocalConfig = configuration.LoadConfig()
+func Send(LocalConfig configuration.Config, emailFrom, emailSubject, emailBody string, emailTo []string) bool {
 
 	mail := Mail{}
 	mail.senderId = LocalConfig.SMTP.Username

@@ -47,7 +47,6 @@ func Bot(logLevel string, Log logging.Logs) {
 	}
 
 	LocalConfig = configuration.LoadConfig()
-	Log.Trace.Println("Config:", LocalConfig.Slack)
 	Log.Info.Println("Slack OAuth Key:", LocalConfig.Slack.BotUserToken)
 	Log.Info.Println("Channel Name:", LocalConfig.Slack.ChannelName)
 	api := slack.New(
@@ -55,11 +54,14 @@ func Bot(logLevel string, Log logging.Logs) {
 		slack.OptionDebug(trace),
 		slack.OptionLog(log.New(os.Stdout, "trace-slack-bot: ", log.Lshortfile|log.LstdFlags)),
 	)
-	args := configuration.DefaultArgs()
+	bot := configuration.DefaultArgs()
 	userName, userID, channelID := getInfo(LocalConfig.Slack.ChannelName, api)
-	args.BotName = userName
-	args.BotID = userID
-	Log.Trace.Println("arguments:", args)
+	// setup struct with slackbot info
+	bot.Name = userName
+	bot.ID = userID
+	bot.ChannelID = channelID
+	bot.ChannelName = LocalConfig.Slack.ChannelName
+	Log.Trace.Println("Bot Info:", bot)
 	Log.Info.Println("Starting RTM slackbot")
 	Log.Debug.Println("Bot Name:", userName)
 	Log.Debug.Println("Bot ID:", userID)
@@ -89,8 +91,11 @@ func Bot(logLevel string, Log logging.Logs) {
 				connectedReceived = true
 			// Check messages in channel
 			case *slack.MessageEvent:
-				if message.Event(ev, rtm, done) == false {
+				if message.Event(LocalConfig, bot, ev, rtm, done) == false {
 					Log.Debug.Printf("Discarding message with content %+v\n", ev)
+					Log.Info.Printf("Text: %+v\n", ev.Text)
+					Log.Info.Printf("Username: %+v\n", ev.Username)
+					Log.Info.Printf("BotID: %+v\n", ev.BotID)
 				}
 			default:
 				Log.Debug.Printf("Discarded event of type '%s' with content '%#v'\n", msg.Type, ev)

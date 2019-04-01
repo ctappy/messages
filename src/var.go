@@ -13,29 +13,24 @@ type Config struct {
 	} `json:"slack"`
 }
 
-type args struct {
-	// debug flags
-	Info  bool
-	Warn  bool
-	Debug bool
-	Trace bool
+type BotInfo struct {
 	// Bot info
-	BotID   string
-	BotName string
+	ID          string
+	Name        string
+	ChannelName string
+	ChannelID   string
 	// Bot options
-	BotDisable bool
+	Disable bool
 }
 
 // default values
-func DefaultArgs() args {
-	return args{
-		false, // Info  bool
-		false, // Warn  bool
-		false, // Debug bool
-		false, // Trace bool
+func DefaultArgs() BotInfo {
+	return BotInfo{
 		// Bot info
 		"", // BotID   string
 		"", // BotName string
+		"", // ChannelName string
+		"", // ChannelID string
 		// Bot options
 		false, // BotDisable bool
 	}
