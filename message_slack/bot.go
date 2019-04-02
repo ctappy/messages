@@ -1,12 +1,15 @@
 package slack
 
 import (
+	"fmt"
 	"github.com/ctaperts/messages/log"
 	"github.com/ctaperts/messages/message_slack/message"
 	"github.com/ctaperts/messages/src"
 	"github.com/nlopes/slack"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 var (
@@ -98,6 +101,18 @@ func Bot(logLevel string, Log logging.Logs) {
 			default:
 				Log.Debug.Printf("Discarded event of type '%s' with content '%#v'\n", msg.Type, ev)
 			}
+		}
+	}()
+
+	// handle interrupt signal
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		for sig := range c {
+			Log.Debug.Printf("%s signal received, shutting down\n", sig)
+			rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("%s is shutting down from %s signal", bot.Name, sig), channelID))
+			rtm.Disconnect()
+			done <- struct{}{}
 		}
 	}()
 
