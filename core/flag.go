@@ -4,7 +4,6 @@ import (
 	"github.com/ctaperts/messages/log"
 	"github.com/ctaperts/messages/message_slack"
 	"github.com/spf13/cobra"
-	"log"
 	"os"
 )
 
@@ -17,7 +16,6 @@ func Exec() {
 	rootCmd.AddCommand(startSlackBotCmd)
 
 	if err := rootCmd.Execute(); err != nil {
-		log.Println(err)
 		os.Exit(1)
 	}
 }
@@ -40,10 +38,8 @@ func startSlackBot(cmd *cobra.Command, args []string) {
 }
 
 func initStartSlackBot(cmd *cobra.Command, args []string) error {
-	log.Println("Initializing Slackbot")
 	return nil
 }
 func initStartGRPC(cmd *cobra.Command, args []string) error {
-	log.Println("Initializing GRPC")
 	return nil
 }
