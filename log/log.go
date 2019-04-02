@@ -82,8 +82,8 @@ func LogInit(logType logType) {
 
 }
 
-// SetupLogs log level defaults
-func SetupLogLevel(logdir, logLevel string) {
+// SetupLog log level defaults and log files
+func SetupLog(logdir, logLevel string) {
 	// Setup log files
 
 	/////////////////////

@@ -24,7 +24,7 @@ func Exec() {
 
 func setup(cmd *cobra.Command, args []string) {
 	// Setup logging
-	logging.SetupLogLevel(logDir, logLevel)
+	logging.SetupLog(logDir, logLevel)
 	logging.LogInit(*logging.LogSettings)
 	Log = logging.Log
 	Log.Info.Printf("Log level set to %s\n", logLevel)
