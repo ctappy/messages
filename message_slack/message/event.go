@@ -6,7 +6,6 @@ import (
 	"github.com/ctaperts/messages/message_email"
 	"github.com/ctaperts/messages/src"
 	"github.com/nlopes/slack"
-	"log"
 	"regexp"
 	"strings"
 )
@@ -68,7 +67,7 @@ func Event(Log logging.Logs, LocalConfig configuration.Config, bot configuration
 	// Check text for exact message
 	switch text := ev.Text; text {
 	case fmt.Sprintf("<@%s> shutdown", bot.ID):
-		log.Println("Shutting down message received")
+		Log.General.Println("Shutting down message received")
 		rtm.SendMessage(rtm.NewOutgoingMessage("Shutting down now...", bot.ChannelID))
 		rtm.Disconnect()
 		done <- struct{}{}

@@ -1,15 +1,17 @@
-package main
+package grpc
 
 import (
 	"context"
 	"github.com/ctaperts/messages/messagepb"
 	"google.golang.org/grpc"
-	"log"
 	// "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 	// "google.golang.org/grpc/status"
+	"github.com/ctaperts/messages/log"
 	"github.com/ctaperts/messages/message_email"
+	// "github.com/ctaperts/messages/message_slack/message"
+	"github.com/ctaperts/messages/src"
 	"net"
 	"os"
 	"os/signal"
@@ -17,6 +19,12 @@ import (
 
 type server struct {
 }
+
+var (
+	LocalConfig configuration.Config
+	Log         logging.Logs
+	Logs        *logging.Logs
+)
 
 func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmailMessageRequest) (*messagepb.CreateEmailMessageResponse, error) {
 	message := req.GetMessage()
@@ -28,11 +36,11 @@ func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmai
 		Body:    message.GetBody(),
 	}
 
-	log.Printf("From: %s, Subject: %s, Body: %s, To: %s\n", data.From, data.Subject, data.Body, data.To)
-	if email.Send(data.From, data.Subject, data.Body, []string{data.To}) {
-		log.Println("Email sent successfully")
+	Log.Email.Printf("GRPC: From: %s, Subject: %s, Body: %s, To: %s\n", data.From, data.Subject, data.Body, data.To)
+	if email.Send(LocalConfig, data.From, data.Subject, data.Body, []string{data.To}) {
+		Log.Debug.Println("Email sent successfully")
 	} else {
-		log.Println("Email failed to send")
+		Log.Debug.Println("Email failed to send")
 	}
 
 	return &messagepb.CreateEmailMessageResponse{
@@ -47,7 +55,7 @@ func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmai
 }
 
 func (*server) CreateSlackMessage(ctx context.Context, req *messagepb.CreateSlackMessageRequest) (*messagepb.CreateSlackMessageResponse, error) {
-	log.Println("Create slack message request")
+	Log.Info.Println("Create slack message request")
 	message := req.GetMessage()
 
 	data := slackMessageItem{
@@ -55,7 +63,7 @@ func (*server) CreateSlackMessage(ctx context.Context, req *messagepb.CreateSlac
 		Body:    message.GetBody(),
 	}
 
-	log.Println(data)
+	Log.Debug.Println(data)
 
 	return &messagepb.CreateSlackMessageResponse{
 		Message: &messagepb.SlackMessage{
@@ -98,14 +106,16 @@ type emailMessageItem struct {
 	Body    string `body`
 }
 
-var debug *bool
+func Exec(Logs logging.Logs) {
+	// Set global variable
+	Log = Logs
 
-func main() {
-	log.Println("Message Service Started")
+	LocalConfig = configuration.LoadConfig()
+	Log.Info.Println("Message Service Started")
 
 	lis, err := net.Listen("tcp", "0.0.0.0:50052")
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		Log.Err.Fatalf("Failed to listen: %v", err)
 	}
 
 	tls := false
@@ -115,7 +125,7 @@ func main() {
 		keyFile := "ssl/server.pem"
 		creds, sslErr := credentials.NewServerTLSFromFile(certFile, keyFile)
 		if sslErr != nil {
-			log.Fatalf("Failed loading certificates: %v", sslErr)
+			Log.Err.Fatalf("Failed loading certificates: %v", sslErr)
 			return
 		}
 		opts = append(opts, grpc.Creds(creds))
@@ -129,9 +139,9 @@ func main() {
 	reflection.Register(s)
 
 	go func() {
-		log.Println("Starting Server...")
+		Log.Info.Println("Starting Server...")
 		if err := s.Serve(lis); err != nil {
-			log.Fatalf("failed to serve: %v", err)
+			Log.Err.Fatalf("failed to serve: %v", err)
 		}
 	}()
 
@@ -141,9 +151,9 @@ func main() {
 
 	// Block until signal is received
 	<-ch
-	log.Println("Stopping the server")
+	Log.General.Println("Stopping the grpc server")
 	s.Stop()
-	log.Println("Closing the listener")
+	Log.General.Println("Closing the listener")
 	lis.Close()
-	log.Println("Application is stopped")
+	Log.General.Println("Application is stopped")
 }

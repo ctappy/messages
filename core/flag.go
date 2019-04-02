@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/ctaperts/messages/log"
+	"github.com/ctaperts/messages/message_server"
 	"github.com/ctaperts/messages/message_slack"
 	"github.com/spf13/cobra"
 	"os"
@@ -30,6 +31,7 @@ func setup(cmd *cobra.Command, args []string) {
 
 func startGRPC(cmd *cobra.Command, args []string) {
 	Log.Info.Println("Starting GRPC Message Server")
+	grpc.Exec(Log)
 }
 
 func startSlackBot(cmd *cobra.Command, args []string) {

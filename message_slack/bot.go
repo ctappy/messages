@@ -44,7 +44,6 @@ func getInfo(channelName string, api *slack.Client) (userName, userID, channelID
 func Bot(logLevel string, Log logging.Logs) {
 	if logLevel == "trace" {
 		trace = true
-		Log.Info.Println("Running slackbot in trace mode")
 	} else {
 		trace = false
 	}
