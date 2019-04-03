@@ -10,8 +10,11 @@ import (
 	// "google.golang.org/grpc/status"
 	"github.com/ctaperts/messages/log"
 	"github.com/ctaperts/messages/message_email"
-	// "github.com/ctaperts/messages/message_slack/message"
+	"github.com/ctaperts/messages/message_slack"
+	"github.com/ctaperts/messages/message_slack/message"
 	"github.com/ctaperts/messages/src"
+	"github.com/nlopes/slack"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -24,6 +27,9 @@ var (
 	LocalConfig configuration.Config
 	Log         logging.Logs
 	Logs        *logging.Logs
+	api         *slack.Client
+	channelID   string
+	trace       bool
 )
 
 func (*server) CreateEmailMessage(ctx context.Context, req *messagepb.CreateEmailMessageRequest) (*messagepb.CreateEmailMessageResponse, error) {
@@ -63,7 +69,8 @@ func (*server) CreateSlackMessage(ctx context.Context, req *messagepb.CreateSlac
 		Body:    message.GetBody(),
 	}
 
-	Log.Debug.Println(data)
+	slackMessage.PostAttachment(Log, api, "grpc title", "grpc type", data.Subject, data.Body, channelID)
+	// slackMessage.PostOptions(Log, api, data.Subject, data.Body, channelID)
 
 	return &messagepb.CreateSlackMessageResponse{
 		Message: &messagepb.SlackMessage{
@@ -106,11 +113,24 @@ type emailMessageItem struct {
 	Body    string `body`
 }
 
-func Exec(Logs logging.Logs) {
+func Exec(logLevel string, Logs logging.Logs) {
+	if logLevel == "trace" {
+		trace = true
+	} else {
+		trace = false
+	}
 	// Set global variable
 	Log = Logs
 
 	LocalConfig = configuration.LoadConfig()
+	getApi := slack.New(
+		LocalConfig.Slack.BotUserToken,
+		slack.OptionDebug(trace),
+		slack.OptionLog(log.New(os.Stdout, "TRACE-SLACK-BOT: ", log.Lshortfile|log.LstdFlags)),
+	)
+	api = getApi
+	_, _, getChannelID := bot.GetInfo(LocalConfig.Slack.ChannelName, api)
+	channelID = getChannelID
 	Log.Info.Println("Message Service Started")
 
 	lis, err := net.Listen("tcp", "0.0.0.0:50052")

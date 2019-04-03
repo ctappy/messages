@@ -31,12 +31,12 @@ func setup(cmd *cobra.Command, args []string) {
 
 func startGRPC(cmd *cobra.Command, args []string) {
 	Log.Info.Println("Starting GRPC Message Server")
-	grpc.Exec(Log)
+	grpc.Exec(logLevel, Log)
 }
 
 func startSlackBot(cmd *cobra.Command, args []string) {
 	Log.Info.Println("Starting Slack Message Server")
-	slack.Bot(logLevel, Log)
+	bot.Slack(logLevel, Log)
 }
 
 func initStartSlackBot(cmd *cobra.Command, args []string) error {

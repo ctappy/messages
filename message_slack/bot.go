@@ -1,4 +1,4 @@
-package slack
+package bot
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ var (
 	trace       bool
 )
 
-func getInfo(channelName string, api *slack.Client) (userName, userID, channelID string) {
+func GetInfo(channelName string, api *slack.Client) (userName, userID, channelID string) {
 
 	// Find the bot info
 	authTest, err := api.AuthTest()
@@ -41,7 +41,7 @@ func getInfo(channelName string, api *slack.Client) (userName, userID, channelID
 	return
 }
 
-func Bot(logLevel string, Log logging.Logs) {
+func Slack(logLevel string, Log logging.Logs) {
 	if logLevel == "trace" {
 		trace = true
 	} else {
@@ -54,10 +54,10 @@ func Bot(logLevel string, Log logging.Logs) {
 	api := slack.New(
 		LocalConfig.Slack.BotUserToken,
 		slack.OptionDebug(trace),
-		slack.OptionLog(log.New(os.Stdout, "trace-slack-bot: ", log.Lshortfile|log.LstdFlags)),
+		slack.OptionLog(log.New(os.Stdout, "TRACE-SLACK-BOT: ", log.Lshortfile|log.LstdFlags)),
 	)
 	bot := configuration.DefaultArgs()
-	userName, userID, channelID := getInfo(LocalConfig.Slack.ChannelName, api)
+	userName, userID, channelID := GetInfo(LocalConfig.Slack.ChannelName, api)
 	// setup struct with slackbot info
 	bot.Name = userName
 	bot.ID = userID
@@ -93,7 +93,7 @@ func Bot(logLevel string, Log logging.Logs) {
 				connectedReceived = true
 			// Check messages in channel
 			case *slack.MessageEvent:
-				if !message.Event(Log, LocalConfig, bot, ev, rtm, done) {
+				if !slackMessage.Event(Log, LocalConfig, bot, ev, rtm, done) {
 					Log.Debug.Printf("Discarding message with content %+v\n", ev)
 					Log.Info.Printf("Text: %+v\n", ev.Text)
 				}

@@ -1,4 +1,4 @@
-package message
+package slackMessage
 
 import (
 	"fmt"
