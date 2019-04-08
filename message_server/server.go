@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ctaperts/messages/messagepb"
 	"google.golang.org/grpc"
+	"net/http"
 	// "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -13,12 +14,16 @@ import (
 	"github.com/ctaperts/messages/message_slack"
 	"github.com/ctaperts/messages/message_slack/message"
 	"github.com/ctaperts/messages/src"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/nlopes/slack"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 )
+
+const grpcIPPort = "0.0.0.0:50052"
+const httpIPPort = "0.0.0.0:8080"
 
 type server struct {
 }
@@ -133,7 +138,7 @@ func Exec(logLevel string, Logs logging.Logs) {
 	channelID = getChannelID
 	Log.Info.Println("Message Service Started")
 
-	lis, err := net.Listen("tcp", "0.0.0.0:50052")
+	lis, err := net.Listen("tcp", grpcIPPort)
 	if err != nil {
 		Log.Err.Fatalf("Failed to listen: %v", err)
 	}
@@ -159,12 +164,14 @@ func Exec(logLevel string, Logs logging.Logs) {
 	reflection.Register(s)
 
 	go func() {
-		Log.Info.Println("Starting Server...")
+		Log.Info.Println("Starting GRPC Server...")
 		if err := s.Serve(lis); err != nil {
 			Log.Err.Fatalf("failed to serve: %v", err)
 		}
 	}()
 
+	Log.Info.Println("Starting HTTP Server...")
+	go run()
 	// Wait for Control C to exit
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt)
@@ -176,4 +183,20 @@ func Exec(logLevel string, Logs logging.Logs) {
 	Log.General.Println("Closing the listener")
 	lis.Close()
 	Log.General.Println("Application is stopped")
+}
+
+func run() {
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+	err := messagepb.RegisterMessageServiceHandlerFromEndpoint(ctx, mux, "localhost:50052", opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("HTTP Listening on %s\n", httpIPPort)
+	log.Fatal(http.ListenAndServe(httpIPPort, mux))
+
 }

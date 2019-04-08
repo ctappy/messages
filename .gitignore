@@ -2,6 +2,8 @@ message_client/message_client
 message_server/message_server
 message_slack/message_slack
 message_email/message_email
+messagepb/message.swagger.json
+messagepb/message.pb.gw.go
 messages
 logs*
 config.json

@@ -2,6 +2,25 @@ syntax = "proto3";
 
 package message;
 
+import "google/api/annotations.proto";
+// import "protoc-gen-swagger/options/annotations.proto";
+//
+// option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+//     info: {
+//       title: "messages";
+//       version: "1.0";
+//       contact: {
+//         name: "messages";
+//         url: "https://github.com/ctaperts/messages";
+//         email: "colbytaperts@gmail.com";
+//       };
+//     };
+//     schemes: HTTP;
+//     schemes: HTTPS;
+//     consumes: "application/json";
+//     produces: "application/json";
+//   };
+
 option go_package = "messagepb";
 
 message SlackMessage {
@@ -49,8 +68,18 @@ message CreateEmailMessageResponse {
 // }
 
 service MessageService {
-  rpc CreateEmailMessage (CreateEmailMessageRequest) returns (CreateEmailMessageResponse);
-  rpc CreateSlackMessage (CreateSlackMessageRequest) returns (CreateSlackMessageResponse);
+  rpc CreateEmailMessage (CreateEmailMessageRequest) returns (CreateEmailMessageResponse) {
+    option (google.api.http) = {
+      post: "/v1/message/email"
+      body: "*"
+    };
+  }
+  rpc CreateSlackMessage (CreateSlackMessageRequest) returns (CreateSlackMessageResponse) {
+    option (google.api.http) = {
+      post: "/v1/message/slack"
+      body: "*"
+    };
+  }
   // rpc ReadMessage (ReadMessageRequest) returns (ReadMessageResponse);
   // rpc ListMessage (ListMessageRequest) returns (stream ListMessageResponse);
 }
