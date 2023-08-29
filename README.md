@@ -4,7 +4,7 @@
 ```
 docker run -p 80:8080 -e SWAGGER_JSON=/foo/message.swagger.json -v $GOPATH/src/github.com/ctaperts/messages/messagepb/:/foo swaggerapi/swagger-ui
 ```
-
+ 
 ## Setup
 Copy `config.json.example to `config.json`
 
